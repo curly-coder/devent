@@ -158,12 +158,10 @@ function normalizeTime(timeStr: string): string {
 }
 
 // Pre-save hook: generate slug, normalize date/time
-EventSchema.pre("save", async function (next) {
-  // Generate slug only if title is new or modified
+EventSchema.pre("save", async function () {
   if (this.isModified("title")) {
     let slug = generateSlug(this.title);
 
-    // Ensure slug uniqueness by appending a suffix if needed
     const Event = this.constructor as Model<IEvent>;
     let existingEvent = await Event.findOne({ slug, _id: { $ne: this._id } });
     let counter = 1;
@@ -177,17 +175,13 @@ EventSchema.pre("save", async function (next) {
     this.slug = slug;
   }
 
-  // Normalize date to ISO format
   if (this.isModified("date")) {
     this.date = normalizeDate(this.date);
   }
 
-  // Normalize time to 24-hour format
   if (this.isModified("time")) {
     this.time = normalizeTime(this.time);
   }
-
-  next();
 });
 
 // Prevent model recompilation in development (Next.js hot reload)
