@@ -36,10 +36,8 @@ const BookingSchema = new Schema<IBooking>(
 );
 
 // Pre-save hook: validate that referenced event exists
-BookingSchema.pre("save", async function (next) {
-  // Only validate eventId if it's new or modified
+BookingSchema.pre("save", async function () {
   if (this.isModified("eventId")) {
-    // Dynamically import Event model to avoid circular dependency issues
     const Event: Model<Document> =
       mongoose.models.Event || (await import("./event.model")).default;
 
@@ -49,9 +47,8 @@ BookingSchema.pre("save", async function (next) {
       throw new Error(`Event with ID ${this.eventId} does not exist`);
     }
   }
-
-  next();
 });
+
 
 // Prevent model recompilation in development (Next.js hot reload)
 const Booking: Model<IBooking> =

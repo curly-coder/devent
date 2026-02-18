@@ -2,7 +2,6 @@
 import { Event } from "@/database";
 import dbConnect from "../mongodb";
 
-
 export const getSimilarEventsBySlug = async (slug: string) => {
   try {
     await dbConnect();
@@ -10,10 +9,10 @@ export const getSimilarEventsBySlug = async (slug: string) => {
 
     if (!event) return [];
 
-    return await Event.find({
+    return JSON.parse(JSON.stringify(await Event.find({
       _id: { $ne: event._id },
       tags: { $in: event.tags },
-    }).lean();
+    })));
   } catch {
     return [];
   }

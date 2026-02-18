@@ -4,6 +4,7 @@ import Image from "next/image";
 import { IEvent } from "@/database";
 import { notFound } from "next/navigation";
 import EventCard from "@/components/EventCard";
+import { Suspense } from "react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -35,13 +36,27 @@ const EventAgenda = ({agendaItems} : {agendaItems: string[]}) => (
   </div>
 )
 
-const EventDetailsPage = async ({params} : {params: Promise<{slug: string}>}) => {
+const EventLoading = () => (
+  <section id="event">
+    <div className="header">
+      <h1>Loading event...</h1>
+    </div>
+    <div className="details">
+      <div className="content">
+        <div className="banner bg-gray-200 animate-pulse" style={{width: 800, height: 400}} />
+      </div>
+    </div>
+  </section>
+)
+
+const EventContent = async ({ params }: { params: Promise<{slug: string}> }) => {
   const {slug} = await params;
   const request = await fetch(`${BASE_URL}/api/events/${slug}`)
   if (!request.ok) {
     return notFound();
   }
-  const {event : {description, image, overview, date, time, location, mode, agenda, tags, audience, organizer}} = await request.json();
+  
+  const {event : {_id, slug: eventSlug, description, image, overview, date, time, location, mode, agenda, tags, audience, organizer}} = await request.json();
 
   if(!description) return notFound();
 
@@ -95,7 +110,7 @@ const EventDetailsPage = async ({params} : {params: Promise<{slug: string}>}) =>
                     ) : (
                       <p className="text-sm">Be the first to book your spot</p>
                     )}
-                    <BookEvent />
+                    <BookEvent eventId={_id} slug={eventSlug}/>
                 </div>
           </aside>
       </div>
@@ -109,6 +124,14 @@ const EventDetailsPage = async ({params} : {params: Promise<{slug: string}>}) =>
           </div>            
       </div>
     </section>
+  )
+}
+
+const EventDetailsPage = ({params} : {params: Promise<{slug: string}>}) => {
+  return (
+    <Suspense fallback={<EventLoading />}>
+      <EventContent params={params} />
+    </Suspense>
   )
 }
 
